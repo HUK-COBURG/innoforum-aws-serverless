@@ -1,0 +1,58 @@
+= SAM CLI
+
+.SAM CLI Execution
+[source,bash]
+----
+Which template source would you like to use?
+        1 - AWS Quick Start Templates
+        2 - Custom Template Location
+Choice: 1
+What package type would you like to use?
+        1 - Zip (artifact is a zip uploaded to S3)
+        2 - Image (artifact is an image uploaded to an ECR image repository)
+Package type: 1
+
+Which runtime would you like to use?
+        1 - nodejs14.x
+        2 - python3.8
+        3 - ruby2.7
+        4 - go1.x
+        5 - java11
+        6 - dotnetcore3.1
+        7 - nodejs12.x
+        8 - nodejs10.x
+        9 - python3.7
+        10 - python3.6
+        11 - python2.7
+        12 - ruby2.5
+        13 - java8.al2
+        14 - java8
+        15 - dotnetcore2.1
+Runtime: 1
+
+Project name [sam-app]:
+
+Cloning app templates from https://github.com/aws/aws-sam-cli-app-templates
+
+AWS quick start application templates:
+        1 - Hello World Example
+        2 - Step Functions Sample App (Stock Trader)
+        3 - Quick Start: From Scratch
+        4 - Quick Start: Scheduled Events
+        5 - Quick Start: S3
+        6 - Quick Start: SNS
+        7 - Quick Start: SQS
+        8 - Quick Start: Web Backend
+Template selection: 1
+
+    -----------------------
+    Generating application:
+    -----------------------
+    Name: sam-app
+    Runtime: nodejs14.x
+    Dependency Manager: npm
+    Application Template: hello-world
+    Output Directory: .
+
+    Next steps can be found in the README file at ./sam-app/README.md
+----

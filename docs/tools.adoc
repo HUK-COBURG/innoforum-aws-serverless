@@ -1,0 +1,8 @@
+= Tools
+
+Folgende Tools werden für die Ausführung und das Ausprobieren des Codes in diesem Repository benötigt:
+
+* https://aws.amazon.com/de/cli/[AWS CLI]
+* https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html[SAM CLI]
+* https://www.terraform.io/[Terraform]
+* https://nodejs.org/en/[Node]
