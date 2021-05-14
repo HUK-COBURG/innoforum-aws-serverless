@@ -260,4 +260,7 @@ override.tf.json
 .history
 .ionide
 
+.aws-sam
+samconfig.toml
+
 # End of https://www.toptal.com/developers/gitignore/api/node,intellij+all,visualstudiocode,terraform

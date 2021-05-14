@@ -1,16 +1,29 @@
 = SAM CLI
 
-.SAM CLI Execution
+Die SAM CLI kann in Kombination mit der AWS CLI dazu genutzt werden, serverless Applikationen zu generieren, bauen, testen und zu deployen.
+
+== Anlegen der Beispielanwendung
+
+Folgendes Beispiel generiert eine Beispielapplikation mit dem Namen `sam-app` auf Basis eines Quick Start Templates mit `nodejs14.x`.
+
+
+.SAM CLI Initialisierung eines neuen Projekts
+[source,bash]
+----
+$ sam init
+----
+
+.SAM CLI Ausführung
 [source,bash]
 ----
 Which template source would you like to use?
         1 - AWS Quick Start Templates
         2 - Custom Template Location
-Choice: 1
+Choice: 1 # <1>
 What package type would you like to use?
         1 - Zip (artifact is a zip uploaded to S3)
         2 - Image (artifact is an image uploaded to an ECR image repository)
-Package type: 1
+Package type: 1  # <2>
 
 Which runtime would you like to use?
         1 - nodejs14.x
@@ -28,9 +41,9 @@ Which runtime would you like to use?
         13 - java8.al2
         14 - java8
         15 - dotnetcore2.1
-Runtime: 1
+Runtime: 1  # <3>
 
-Project name [sam-app]:
+Project name [sam-app]:  # <4>
 
 Cloning app templates from https://github.com/aws/aws-sam-cli-app-templates
 
@@ -43,7 +56,7 @@ AWS quick start application templates:
         6 - Quick Start: SNS
         7 - Quick Start: SQS
         8 - Quick Start: Web Backend
-Template selection: 1
+Template selection: 1  # <5>
 
     -----------------------
     Generating application:
@@ -56,3 +69,318 @@ Template selection: 1
 
     Next steps can be found in the README file at ./sam-app/README.md
 ----
+<1> Generierung eines Quick Start Templates
+<2> Package Type `zip` zur Distribution des Ergebnisses
+<3> Auswahl der Laufzeitumgebung `nodejs14.x`
+<4> Definition des Projektnamens (keine Änderung)
+<5> Auswahl des `Hello World Example` als Basis
+
+Die Ausführung des Befehls `sam init` generiert das unter `../sam-app` auffindbare Ergebnis.
+
+== Inhalte der Beispielanwendung
+
+Hier ist die Datei `template.yaml` neben Testevents unter `../sam-app/events` sowie der Implementierung des Lambda Handlers unter `../sam-app/hello-world/app.js` zu finden.
+
+.Lambda Template aus `template.yaml`
+[source,yaml]
+----
+include::../sam-app/template.yaml[tags=lambda]
+----
+<1> Globale Definitionen des Funktionstimeouts von 3 Sekunden
+<2> CodeUri relativ zum Verzeichnis
+<3> Name des exportierten Handlers (in Datei `app.js` der Export `lambdaHandler`)
+<4> Definition der Laufzeitumgebung `nodejs14.x`
+<5> Eventdefinition als Trigger (API Gateway)
+<6> Auslöser der Funktion ist die Ressource `/hello` mit der Methode `get`
+
+.Outputs aus `template.yaml`
+[source,yaml]
+----
+include::../sam-app/template.yaml[tags=outputs]
+----
+
+Die in den Outputs definierten Werte werden aus der Ausführung der SAM CLI ausgegeben (auf der Kommandozeile).
+
+.Definition des Lambda Handlers (aus `hello-world/app.js`)
+[source,javascript]
+----
+include::../sam-app/hello-world/app.js[]
+----
+<1> Exportieren des asynchronen Lambda Handlers
+<2> Definition der Antwort auf die Ausführung des Lambda Handlers
+<3> Rückgabe des generierten JSON
+
+== Deployment der Beispielanwendung
+
+Das Deployment der Beispielanwendung kann im Verzeichnis `../sam-app` durchgeführt werden.
+Zunächst muss die Anwendung gebaut werden.
+Das führt zur Generierung einer zip-Datei unterhalb des Verzeichnisses `../sam-app/.aws-sam`, welches in der Folge deployed werden kann:
+
+[code,bash]
+----
+$ sam build -t template.yaml # <1>
+Running NodejsNpmBuilder:NpmPack
+Running NodejsNpmBuilder:CopyNpmrc
+Running NodejsNpmBuilder:CopySource
+Running NodejsNpmBuilder:NpmInstall
+Running NodejsNpmBuilder:CleanUpNpmrc
+
+Build Succeeded
+
+Built Artifacts  : .aws-sam/build
+Built Template   : .aws-sam/build/template.yaml
+
+Commands you can use next
+=========================
+[*] Invoke Function: sam local invoke
+[*] Deploy: sam deploy --guided
+----
+<1> Ausführung des Buildbefehls mit Angabe der Datei `template.yaml` als Modelldefinition
+
+Anschließend liegt das gebaute Artefakt unter `../sam-app/.aws-sam`:
+
+[source,bash]
+----
+.aws-sam
+├── build
+│   ├── HelloWorldFunction
+│   │ …
+│   └── template.yaml
+└── build.toml
+
+11 directories, 53 files
+----
+
+Im Unterverzeichnis `HelloWorldFunction` liegen noch weitere JavaScript Artefakte, die in dieser Darstellung ausgespart wurden.
+
+Zum Deployment der kompilierten Funktion in AWS kann folgender Befehl genutzt werden:
+
+[source,bash]
+----
+$ sam deploy --guided
+
+Configuring SAM deploy
+======================
+
+        Looking for config file [samconfig.toml] :  Not found
+
+        Setting default arguments for 'sam deploy'
+        =========================================
+        Stack Name [sam-app]:
+        AWS Region [eu-central-1]:
+        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
+        Confirm changes before deploy [y/N]: y
+        #SAM needs permission to be able to create roles to connect to the resources in your template
+        Allow SAM CLI IAM role creation [Y/n]: y
+        HelloWorldFunction may not have authorization defined, Is this okay? [y/N]: y
+        Save arguments to configuration file [Y/n]: y
+        SAM configuration file [samconfig.toml]:
+        SAM configuration environment [default]:
+
+        Looking for resources needed for deployment: Not found.
+        Creating the required resources...
+        Successfully created!
+
+                Managed S3 bucket: aws-sam-cli-managed-default-samclisourcebucket-85lggfv01kkv
+                A different default S3 bucket can be set in samconfig.toml
+
+        Saved arguments to config file
+        Running 'sam deploy' for future deployments will use the parameters saved above.
+        The above parameters can be changed by modifying samconfig.toml
+        Learn more about samconfig.toml syntax at
+        https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-config.html
+
+Uploading to sam-app/68a68e0a6220fa7027102b56c3c540b9  121888 / 121888  (100.00%)
+
+        Deploying with following values
+        ===============================
+        Stack name                   : sam-app
+        Region                       : eu-central-1
+        Confirm changeset            : True
+        Deployment s3 bucket         : aws-sam-cli-managed-default-samclisourcebucket-85lggfv01kkv
+        Capabilities                 : ["CAPABILITY_IAM"]
+        Parameter overrides          : {}
+        Signing Profiles             : {}
+
+Initiating deployment
+=====================
+Uploading to sam-app/776ce830e2fad0f798607c7f03a3ba05.template  1089 / 1089  (100.00%)
+
+Waiting for changeset to be created..
+
+CloudFormation stack changeset
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Operation                                                 LogicalResourceId                                         ResourceType                                              Replacement
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
++ Add                                                     HelloWorldFunctionHelloWorldPermissionProd                AWS::Lambda::Permission                                   N/A
++ Add                                                     HelloWorldFunctionRole                                    AWS::IAM::Role                                            N/A
++ Add                                                     HelloWorldFunction                                        AWS::Lambda::Function                                     N/A
++ Add                                                     ServerlessRestApiDeployment47fc2d5f9d                     AWS::ApiGateway::Deployment                               N/A
++ Add                                                     ServerlessRestApiProdStage                                AWS::ApiGateway::Stage                                    N/A
++ Add                                                     ServerlessRestApi                                         AWS::ApiGateway::RestApi                                  N/A
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Changeset created successfully. arn:aws:cloudformation:eu-central-1:238984971801:changeSet/samcli-deploy1620993459/653f26be-f9e4-4973-b9e3-1050ede0569f
+
+
+Previewing CloudFormation changeset before deployment
+======================================================
+Deploy this changeset? [y/N]: y
+
+2021-05-14 13:57:48 - Waiting for stack create/update to complete
+
+CloudFormation events from changeset
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ResourceStatus                                            ResourceType                                              LogicalResourceId                                         ResourceStatusReason
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+CREATE_IN_PROGRESS                                        AWS::IAM::Role                                            HelloWorldFunctionRole                                    Resource creation Initiated
+CREATE_IN_PROGRESS                                        AWS::IAM::Role                                            HelloWorldFunctionRole                                    -
+CREATE_COMPLETE                                           AWS::IAM::Role                                            HelloWorldFunctionRole                                    -
+CREATE_IN_PROGRESS                                        AWS::Lambda::Function                                     HelloWorldFunction                                        -
+CREATE_COMPLETE                                           AWS::Lambda::Function                                     HelloWorldFunction                                        -
+CREATE_IN_PROGRESS                                        AWS::Lambda::Function                                     HelloWorldFunction                                        Resource creation Initiated
+CREATE_IN_PROGRESS                                        AWS::ApiGateway::RestApi                                  ServerlessRestApi                                         -
+CREATE_COMPLETE                                           AWS::ApiGateway::RestApi                                  ServerlessRestApi                                         -
+CREATE_IN_PROGRESS                                        AWS::ApiGateway::RestApi                                  ServerlessRestApi                                         Resource creation Initiated
+CREATE_IN_PROGRESS                                        AWS::ApiGateway::Deployment                               ServerlessRestApiDeployment47fc2d5f9d                     -
+CREATE_IN_PROGRESS                                        AWS::Lambda::Permission                                   HelloWorldFunctionHelloWorldPermissionProd                -
+CREATE_IN_PROGRESS                                        AWS::ApiGateway::Deployment                               ServerlessRestApiDeployment47fc2d5f9d                     Resource creation Initiated
+CREATE_IN_PROGRESS                                        AWS::Lambda::Permission                                   HelloWorldFunctionHelloWorldPermissionProd                Resource creation Initiated
+CREATE_COMPLETE                                           AWS::ApiGateway::Deployment                               ServerlessRestApiDeployment47fc2d5f9d                     -
+CREATE_IN_PROGRESS                                        AWS::ApiGateway::Stage                                    ServerlessRestApiProdStage                                -
+CREATE_IN_PROGRESS                                        AWS::ApiGateway::Stage                                    ServerlessRestApiProdStage                                Resource creation Initiated
+CREATE_COMPLETE                                           AWS::ApiGateway::Stage                                    ServerlessRestApiProdStage                                -
+CREATE_COMPLETE                                           AWS::Lambda::Permission                                   HelloWorldFunctionHelloWorldPermissionProd                -
+CREATE_COMPLETE                                           AWS::CloudFormation::Stack                                sam-app                                                   -
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CloudFormation outputs from deployed stack
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Outputs
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Key                 HelloWorldFunctionIamRole
+Description         Implicit IAM Role created for Hello World function
+Value               arn:aws:iam::238984971801:role/sam-app-HelloWorldFunctionRole-186NX3XYTD9XD
+
+Key                 HelloWorldApi
+Description         API Gateway endpoint URL for Prod stage for Hello World function
+Value               https://k0nyvdhkx1.execute-api.eu-central-1.amazonaws.com/Prod/hello/ # <1>
+
+Key                 HelloWorldFunction
+Description         Hello World Lambda Function ARN
+Value               arn:aws:lambda:eu-central-1:238984971801:function:sam-app-HelloWorldFunction-zw4atiYwAWhE
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Successfully created/updated stack - sam-app in eu-central-1
+
+----
+<1> Ausgabe der REST API URL zum Auslösen der Funktion
+
+Anschließend kann die Funktion durch Aufrufen der URL unter https://k0nyvdhkx1.execute-api.eu-central-1.amazonaws.com/Prod/hello/ (in dieser Ausgabe) aufgerufen werden.
+
+== Ausführung eines lokalen Tests
+
+Im Verzeichnis `../sam-app/events` liegt ein vorkonfiguriertes Beispielevent für die Quick Start Anwendung vor.
+Dieses enthält ein Event aus einem API Gateway, das auf das Quick Start Beispiel angewandt werden kann.
+
+Zum lokalen Testen des Events ist ein laufendes Docker System notwendig (z.B. Docker Desktop).
+Anschließend kann durch `sam local invoke -t template.yaml -e events/event.json` das Event mit dem gegebenen Template auf den Lambda Handler aufgerufen werden:
+
+[source,bash]
+----
+$ sam local invoke -t template.yaml -e events/event.json
+
+Invoking app.lambdaHandler (nodejs14.x)
+Skip pulling image and use local one: amazon/aws-sam-cli-emulation-image-nodejs14.x:rapid-1.23.0.
+
+Mounting sam-app/hello-world as /var/task:ro,delegated inside runtime container
+START RequestId: d802dd2b-e1e4-44db-b38e-a9ae8672d19a Version: $LATEST
+END RequestId: d802dd2b-e1e4-44db-b38e-a9ae8672d19a
+REPORT RequestId: d802dd2b-e1e4-44db-b38e-a9ae8672d19a  Init Duration: 0.93 ms  Duration: 290.24 ms     Billed Duration: 300 ms Memory Size: 128 MB     Max Memory Used: 128 MB
+{"statusCode":200,"body":"{\"message\":\"hello world\"}"}%
+----
+
+Alternativ kann eine lokale Kopie des API Gateways gestartet werden, um darauf Requests auszuführen:
+
+[source,bash]
+----
+$ sam local start-api -t template.yaml
+----
+
+Anschließend kann von einer anderen Shell Session folgendes ausgeführt werden:
+
+[source,bash]
+----
+$ curl "http://localhost:3000/hello"
+{"message":"hello world"}
+----
+
+Dies führt in der ersten Shell Session zu folgendem Output:
+
+[source,bash]
+----
+Mounting HelloWorldFunction at http://127.0.0.1:3000/hello [GET]
+You can now browse to the above endpoints to invoke your functions. You do not need to restart/reload SAM CLI while working on your functions, changes will be reflected instantly/automatically. You only need to restart SAM CLI if you update your AWS SAM template
+2021-05-14 14:15:02  * Running on http://127.0.0.1:3000/ (Press CTRL+C to quit)
+Invoking app.lambdaHandler (nodejs14.x)
+Skip pulling image and use local one: amazon/aws-sam-cli-emulation-image-nodejs14.x:rapid-1.23.0.
+
+Mounting sam-app/hello-world as /var/task:ro,delegated inside runtime container
+START RequestId: 7c17924a-6363-46f8-b6ea-8a14350dfab3 Version: $LATEST
+END RequestId: 7c17924a-6363-46f8-b6ea-8a14350dfab3
+REPORT RequestId: 7c17924a-6363-46f8-b6ea-8a14350dfab3  Init Duration: 0.12 ms  Duration: 116.68 ms     Billed Duration: 200 ms Memory Size: 128 MB     Max Memory Used: 128 MB
+No Content-Type given. Defaulting to 'application/json'.
+2021-05-14 14:15:11 127.0.0.1 - - [14/May/2021 14:15:11] "GET /hello HTTP/1.1" 200 -
+----
+
+Die Ausführung startet das lokale API Gateway auf Port 3000 mit dem Mapping, das in `template.yaml` definiert ist.
+Anschließend sorgt der einkommende Request über `curl` dafür, dass die Funktionsausführung initiiert wird und startet das Lambda mit `nodejs14.x` und dem entsprechenden Handler, der passend ausgeführt wird und als Nachricht `Hello World` zurückgibt.
+
+== Entfernen der Beispielanwendung aus AWS
+
+Zum Entfernen der Anwendung sind drei Schritte notwendig:
+
+. Undeploy der Applikation `sam-app`
+. Leeren des Buckets für die SAM CLI
+. Entfernen des CloudFormation Templates für die SAM CLI
+
+Durch den Aufruf von `aws cloudformation list-stacks --output yaml` können die entsprechenden Stacks aufgelistet werden.
+Hier müssten zwei CloudFormation Stacks erkennbar sein.
+Ein Stack repräsentiert die Anwendung und der andere die entsprechende Referenz für die SAM CLI:
+
+[source,bash]
+----
+StackSummaries:
+- CreationTime: '2021-05-14T11:57:39.857000+00:00' # <1>
+  DriftInformation:
+    StackDriftStatus: NOT_CHECKED
+  LastUpdatedTime: '2021-05-14T11:57:48.579000+00:00'
+  StackId: arn:aws:cloudformation:eu-central-1:238984971801:stack/sam-app/95080470-b4ab-11eb-9fbc-0a4f1fcd9da6
+  StackName: sam-app
+  StackStatus: CREATE_COMPLETE
+  TemplateDescription: 'sam-app
+
+    Sample SAM Template for sam-app
+
+    '
+- CreationTime: '2021-05-14T11:56:51.721000+00:00' <2>
+  DriftInformation:
+    StackDriftStatus: NOT_CHECKED
+  LastUpdatedTime: '2021-05-14T11:57:07.342000+00:00'
+  StackId: arn:aws:cloudformation:eu-central-1:238984971801:stack/aws-sam-cli-managed-default/785f9770-b4ab-11eb-bf7d-0aabd7664dcc
+  StackName: aws-sam-cli-managed-default
+  StackStatus: CREATE_COMPLETE
+  TemplateDescription: Managed Stack for AWS SAM CLI
+----
+<1> Stack der Beispielanwendung
+<2> Stack für die Verwaltung der SAM CLI
+
+Anschließend können die Stacks entfernt werden, wobei nach der Entfernung der `sam-app` zunächst der S3 Bucket für die SAM CLI geleert werden muss, was über die AWS Web Console durchgeführt werden kann.
+
+[source,bash]
+----
+$ aws cloudformation delete-stack --stack-name sam-app # <1>
+$ aws cloudformation delete-stack --stack-name aws-sam-cli-managed-default # <2>
+----
+<1> Entfernen des SAM App Stacks
+<2> Entfernen des SAM CLI Stacks

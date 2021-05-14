@@ -1,4 +1,12 @@
-= Tools
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+= Tools und Einrichtung
 
 Folgende Tools werden für die Ausführung und das Ausprobieren des Codes in diesem Repository benötigt:
 
@@ -6,3 +14,47 @@ Folgende Tools werden für die Ausführung und das Ausprobieren des Codes in die
 * https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html[SAM CLI]
 * https://www.terraform.io/[Terraform]
 * https://nodejs.org/en/[Node]
+
+== AWS CLI
+
+Die AWS CLI ist das zentrale Kommandozeilenwerkzeug zur Interaktion mit Funktionalitäten der AWS Cloud.
+
+Zur Konfiguration der AWS CLI muss im Verzeichnis `$HOME/.aws` eine Datei mit Konfiguration (`config`) bzw. Authentifizierungsdaten (`credentials`) hinterlegt sein.
+
+Diese kann über folgenden Befehl erzeugt werden:
+[source,bash]
+----
+# erstellt ein Profil namens "default"
+aws configure
+# alternativ mit Angabe eines Profilenamens
+aws configure --profile myProfile
+----
+
+Nach erfolgreicher Einrichtung des Profils unter Angabe ist in der Datei `$HOME/.aws/config` folgender Inhalt vorhanden:
+[source,bash]
+----
+[default]
+region = eu-central-1
+----
+
+Die zugehörigen Logindaten bestehend aus Access Key und Secret Key sind in der Datei `$HOME/.aws/credentials` abgelegt.
+
+Bei der Verwendung einer Multi Account Struktur bietet es sich an, verschiedene Profile mit unterschiedlichen Namen zu pflegen.
+
+== SAM CLI
+
+Die SAM CLI ist das Kommandozeilenwerkzeug zur Bearbeitung von Serverless Anwendungen.
+Dieses Werkzeug benötigt keine gesonderte Konfiguration und funktioniert direkt nach Installation und Einrichtung der Daten in der AWS CLI.
+
+== Terraform
+
+Terraform ist ein Werkzeug zur Infrastrukturprovisionierung, welches alternativ zum Deployment mittels SAM CLI oder auch ergänzend zu SAM CLI eingesetzt werden kann.
+Nach der Installation ist keine weitere Konfiguration notwendig, jegliche Konfiguration geschieht in der Anwendung der entsprechenden Module.
+
+== Node
+
+In diesem Beispiel wird eine serverless Anwendung auf Basis von Node genutzt.
+[NOTE]
+====
+Aktuell werden die Node Versionen 14.x, 12.x und 10.x von AWS Lambda unterstützt.
+====
