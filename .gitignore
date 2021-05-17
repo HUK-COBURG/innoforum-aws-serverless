@@ -247,6 +247,8 @@ override.tf.json
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # example: *tfplan*
 
+.terraform.lock.hcl
+
 ### VisualStudioCode ###
 .vscode/*
 !.vscode/settings.json
@@ -260,7 +262,8 @@ override.tf.json
 .history
 .ionide
 
-.aws-sam
+.aws-sam/
 samconfig.toml
+build/
 
 # End of https://www.toptal.com/developers/gitignore/api/node,intellij+all,visualstudiocode,terraform

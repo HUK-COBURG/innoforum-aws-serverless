@@ -1,1 +1,165 @@
 = Terraform
+
+Terraform ist ein Werkzeug zur Infrastrukturprovisionierung, das dazu genutzt werden kann, Artefakte in Cloudsystemen, wie AWS, zu verwalten.
+Es stellt die Möglichkeit bereit, über die Implementierung von Modulen, die Komposition von Diensten versionierbar zur Verfügung zu stellen.
+
+Im Verzeichnis `../terraform` ist ein Terraform Modul beschrieben, das die Lambda Funktion mitsamt dem zugehörigen API Gateway aus den Quelltexten provisionieren kann.
+
+== Inhalte
+
+Das Terraform Modul ist in drei Teile aufgeteilt:
+
+. `base.tf`: Basiskonfiguration des Moduls
+. `lambda.tf`: Konfiguration der Lambda-Funktion
+. `apigateway.tf`: Konfiguration des API Gateway auch in Zusammenspiel mit der Lambda Funktion
+
+Durch die Platzierung der drei Dateien im selben Verzeichnis ("Modul"), können Definitionen und Variablen untereinander geteilt werden.
+
+=== Basiskonfiguration
+
+[source,hcl]
+----
+include::../terraform/base.tf[]
+----
+<1> Deklaration der benötigten Provider
+<2> Konfiguration des Providers `aws` mit entsprechender Region (`eu-central-1` entspricht Frankfurt)
+
+=== Lambda Funktion
+
+[source,hcl]
+----
+include::../terraform/lambda.tf[]
+----
+<1> Generierung der Zip Datei aus dem Quelltext unter `../sam-app/hello-world`
+<2> Provisionierung eines S3 Buckets zur Ablage der Zip Datei
+<3> Upload der Zip Datei in den entsprechenden Bucket
+<4> Provisionierung einer IAM Ausführungsrolle für die Lambda Funktion
+<5> IAM Policy als Basis für die Ausführungsrolle
+<6> Definition der Lambda Funktion mit den bereits provisionierten Infrastrukturbestandteilen
+
+=== API Gateway
+
+[source,hcl]
+----
+include::../terraform/apigateway.tf[]
+----
+<1> Deklaration der REST API als `Hello World API`
+<2> Ressourcendefinition als Proxy zu Lambda
+<3> Methodendefinition auf der Proxyressource
+<4> Integration mit der Lambda Funktion auf Basis der `invoke_arn`
+<5> Deployment der API in der Stage `test`
+<6> Ausführungsberechtigung des Gateways auf die Lambda Funktion
+<7> Ausgabe der URL zum API Gateway
+
+== Anwendung
+
+Zum Deployment des Moduls müssen lediglich im Verzeichnis `../terraform` folgende Befehle eingegeben werden:
+
+.Terraform Initialisierung
+[source,bash]
+----
+$ terraform init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Finding hashicorp/aws versions matching "~> 3.0"...
+- Finding hashicorp/archive versions matching "~> 2.2"...
+- Installing hashicorp/archive v2.2.0...
+- Installed hashicorp/archive v2.2.0 (self-signed, key ID 34365D9472D7468F)
+- Installing hashicorp/aws v3.40.0...
+- Installed hashicorp/aws v3.40.0 (self-signed, key ID 34365D9472D7468F)
+
+Partner and community providers are signed by their developers.
+If you'd like to know more about provider signing, you can read about it here:
+https://www.terraform.io/docs/cli/plugins/signing.html
+
+Terraform has created a lock file .terraform.lock.hcl to record the provider
+selections it made above. Include this file in your version control repository
+so that Terraform can guarantee to make the same selections by default when
+you run "terraform init" in the future.
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+----
+
+.Anwendung des Terraform Moduls
+[source,bash]
+----
+$ terraform apply -auto-approve
+
+aws_iam_role.function_role: Creating...
+aws_api_gateway_rest_api.api: Creating...
+aws_s3_bucket.lambda_sources: Creating...
+aws_api_gateway_rest_api.api: Creation complete after 1s [id=xruo9vynu0]
+aws_api_gateway_resource.proxy: Creating...
+aws_api_gateway_resource.proxy: Creation complete after 1s [id=spuacn]
+aws_api_gateway_method.proxy: Creating...
+aws_api_gateway_method.proxy: Creation complete after 0s [id=agm-xruo9vynu0-spuacn-ANY]
+aws_iam_role.function_role: Creation complete after 2s [id=lambda_execution_role]
+aws_s3_bucket.lambda_sources: Creation complete after 3s [id=terraform-20210517113234833200000001]
+aws_s3_bucket_object.object: Creating...
+aws_s3_bucket_object.object: Creation complete after 1s [id=function.zip]
+aws_lambda_function.function: Creating...
+aws_lambda_function.function: Still creating... [10s elapsed]
+aws_lambda_function.function: Creation complete after 14s [id=HelloWorld]
+aws_lambda_permission.apigw: Creating...
+aws_api_gateway_integration.proxy: Creating...
+aws_lambda_permission.apigw: Creation complete after 1s [id=AllowAPIGatewayInvoke]
+aws_api_gateway_integration.proxy: Creation complete after 1s [id=agi-xruo9vynu0-spuacn-ANY]
+aws_api_gateway_deployment.deployment: Creating...
+aws_api_gateway_deployment.deployment: Creation complete after 1s [id=myc1xt]
+
+Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+invoke_url = "https://xruo9vynu0.execute-api.eu-central-1.amazonaws.com/test"
+----
+
+Dieses Kommando erzeugt alle notwendigen Ressourcen und gibt endgültig die provisionierte URL zum API Gateway aus, das die Lambda Funktion auslöst.
+
+Die URL kann auch später über `terraform output` erneut abgerufen werden, z.B. `terraform output -raw invoke_url`.
+
+Somit kann die Lambda Funktion aus dem Beispiel mittels https://xruo9vynu0.execute-api.eu-central-1.amazonaws.com/test/hello ausgelöst werden.
+
+Zur Zerstörung bzw. des Aufräumens ist folgendes Kommando notwendig:
+
+[source,bash]
+----
+$ terraform destroy -auto-approve
+
+aws_api_gateway_deployment.deployment: Destroying... [id=myc1xt]
+aws_api_gateway_method.proxy: Destroying... [id=agm-xruo9vynu0-spuacn-ANY]
+aws_lambda_permission.apigw: Destroying... [id=AllowAPIGatewayInvoke]
+aws_api_gateway_method.proxy: Destruction complete after 0s
+aws_lambda_permission.apigw: Destruction complete after 0s
+aws_api_gateway_deployment.deployment: Destruction complete after 1s
+aws_api_gateway_integration.proxy: Destroying... [id=agi-xruo9vynu0-spuacn-ANY]
+aws_api_gateway_integration.proxy: Destruction complete after 0s
+aws_api_gateway_resource.proxy: Destroying... [id=spuacn]
+aws_lambda_function.function: Destroying... [id=HelloWorld]
+aws_api_gateway_resource.proxy: Destruction complete after 0s
+aws_api_gateway_rest_api.api: Destroying... [id=xruo9vynu0]
+aws_lambda_function.function: Destruction complete after 0s
+aws_s3_bucket_object.object: Destroying... [id=function.zip]
+aws_iam_role.function_role: Destroying... [id=lambda_execution_role]
+aws_s3_bucket_object.object: Destruction complete after 0s
+aws_s3_bucket.lambda_sources: Destroying... [id=terraform-20210517113234833200000001]
+aws_api_gateway_rest_api.api: Destruction complete after 1s
+aws_s3_bucket.lambda_sources: Destruction complete after 1s
+aws_iam_role.function_role: Destruction complete after 2s
+
+Destroy complete! Resources: 10 destroyed.
+----
+
+Terraform pflegt den aktuellen Zustand in einem `tfstate` File.
+In diesem Beispiel liegt das State File lokal im Modulverzeichnis.
+Dies ist für einen Produktiveinsatz mit mehreren Nutzern nicht sinnvoll, hier sollte Remote State, z.B. in S3, genutzt werden.
