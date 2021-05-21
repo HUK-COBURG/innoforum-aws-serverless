@@ -1,0 +1,22 @@
+= Rest APIs leicht gemacht mit AWS Serverless
+
+Dieses Repository zeigt einen Überblick über eine Serverless Applikation.
+
+Es enthält eine sehr grundlegende Applikation, die mithilfe eines Generators erzeugt wurde und direkt auf AWS lauffähig ist.
+
+Für die Verwendung innerhalb von AWS wird ein AWS Account benötigt.
+
+Die anfallenden Kosten _sollten_ sich innerhalb des AWS Free Tier bewegen, da hier ausschließlich Ressourcen verwendet werden, die unter das Free Tier fallen.
+Allerdings bietet es sich an, die Ressourcen nach der Verwendung jeweils wieder zu zerstören.
+Das Vorgehen zur Zerstörung der Artefakte ist in der Dokumentation der jeweiligen Artefakte (SAM CLI oder Terraform) zu finden.
+
+Die folgenden Sektionen und Dateien erklären die benötigten Werkzeuge sowohl die Anwendung derselben ausführlicher, um die Beispiele selbständig durchführen zu können.
+
+include::docs/tools.adoc[leveloffset=+1]
+
+include::docs/sam.adoc[leveloffset=+1]
+
+include::docs/terraform.adoc[leveloffset=+1]
+
+include::docs/aws-console.adoc[leveloffset=+1]
+

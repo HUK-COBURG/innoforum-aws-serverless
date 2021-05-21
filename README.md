@@ -1,1 +1,0 @@
-# innoforum-aws-serverless
