@@ -14,20 +14,21 @@ let response;
  * @returns {Object} object - API Gateway Lambda Proxy Output Format
  * 
  */
-exports.lambdaHandler = async (event, context) => { // <1>
-    try {
-        // const ret = await axios(url);
-        response = {
-            'statusCode': 200,
-            'body': JSON.stringify({
-                message: 'hello world', // <2>
-                // location: ret.data.trim()
-            })
-        }
-    } catch (err) {
-        console.log(err);
-        return err;
+exports.lambdaHandler = async (event) => { // <1>
+    var result = "Hello "
+    if (event.queryStringParameters && event.queryStringParameters.name) {
+        console.log("received name: " + event.queryStringParameters.name);
+        result = result + event.queryStringParameters.name
+    } else {
+        result = result + "World"
     }
 
-    return response // <3>
+    console.log("Result: " + result);
+
+    const response = {
+        statusCode: 200,
+        body: JSON.stringify(result),
+    };
+
+    return response;
 };

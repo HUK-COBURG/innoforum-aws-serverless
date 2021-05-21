@@ -18,3 +18,5 @@ include::docs/sam.adoc[leveloffset=+1]
 
 include::docs/terraform.adoc[leveloffset=+1]
 
+include::docs/aws-console.adoc[leveloffset=+1]
+

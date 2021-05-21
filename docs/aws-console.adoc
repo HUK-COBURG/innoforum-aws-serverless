@@ -1,0 +1,46 @@
+= Aufbau des Beispiels über die AWS Console
+
+Dieser Abschnitt beschreibt den manuellen Aufbau über die AWS Console.
+Die einzelnen Schritte sind analog zu den in der Livedemo durchgeführten Abläufen.
+
+== IAM
+
+. Search for AWS-IAM Service
+. Click on „Roles“
+. Click on „create role“
+. Trusted entity is „AWS Service“
+. Use cases ist Lambda
+. Click on Next:Permissions
+. Search for „AWSLambdaBasicExecutionRole“ an click in the Checkbox. After that click on „Next: Tags“
+. Click on „Next: Review
+. Set your Role Name(HelloWorldLambda) an Click „Create role“
+
+== Lambda
+
+. Search for AWS-IAM Lambda
+. Click on Create Functions
+. Set Funktion namen (Hello World)
+. Set Runtime(Node.js 14.x vorbelegt)
+. Permissions -> Change default execution role. click on „use an existing role“ and select the Icreated IAM role(HelloWorldLambda)
+. Click on „Create funktion“
+
+== APi-Gateway:
+
+. Search for AWS-API Gateway Service
+. Click on Create API
+. Build a Rest API
+. Set a API name and add optional a Description
+. Click on Create API
+. Click on Resources
+. Click on Actions and select „create Methode“
+. Select the HTTP Methode „GET“ an click on the chop
+. Select the Use Lambda Proxy integration
+. Search your Lambda Funktion what they habe created and click on Save
+. Click OK
+. if you want to add a query parameter click on "Method Request" and then on „URL Query String Parameters“.
+. Click on Add query string
+. enter the name and confirm it with the checkmark
+. if you want to access the API from outside click on „Resources„ then on „Actions“ and select Deploy API.
+. Click on Deployment stage "New Stage“
+. Set a stage name (dev) and you can add optional descriptions
+. click on Deploy
