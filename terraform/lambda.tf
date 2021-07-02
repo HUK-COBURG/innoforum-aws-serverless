@@ -10,6 +10,13 @@ resource "aws_s3_bucket" "lambda_sources" { # <2>
   versioning {
     enabled = true
   }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
 }
 
 resource "aws_s3_bucket_object" "object" { # <3>
@@ -47,4 +54,7 @@ resource "aws_lambda_function" "function" { # <6>
   s3_bucket = aws_s3_bucket.lambda_sources.bucket
   s3_key = aws_s3_bucket_object.object.key
   s3_object_version = aws_s3_bucket_object.object.version_id
+  tracing_config {
+    mode = "PassThrough"
+  }
 }
