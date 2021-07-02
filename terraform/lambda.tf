@@ -44,4 +44,7 @@ resource "aws_lambda_function" "function" { # <6>
   s3_bucket = aws_s3_bucket.lambda_sources.bucket
   s3_key = aws_s3_bucket_object.object.key
   s3_object_version = aws_s3_bucket_object.object.version_id
+  tracing_config {
+    mode = "PassThrough"
+  }
 }
