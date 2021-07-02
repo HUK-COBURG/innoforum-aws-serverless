@@ -7,6 +7,9 @@ data "archive_file" "lambda_function" { # <1>
 
 resource "aws_s3_bucket" "lambda_sources" { # <2>
   acl = "private"
+  versioning {
+    enabled = true
+  }
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
