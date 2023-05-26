@@ -5,8 +5,9 @@ data "archive_file" "lambda_function" { # <1>
   output_path      = "${path.module}/../sam-app/build/app.js.zip"
 }
 
+
 resource "aws_s3_bucket" "lambda_sources" { # <2>
-  bucket = "lambda-bucket"
+  bucket_prefix = "lambda-bucket"
 }
 
 resource "aws_s3_bucket_versioning" "lambda_versioning" { # <2>
