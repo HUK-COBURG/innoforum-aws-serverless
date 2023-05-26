@@ -6,7 +6,7 @@ data "archive_file" "lambda_function" { # <1>
 }
 
 resource "aws_s3_bucket" "lambda_sources" { # <2>
-  bucket = "lambda-bucket-2023-demo"
+  bucket = "lambda-bucket"
 }
 
 resource "aws_s3_bucket_versioning" "lambda_versioning" { # <2>
