@@ -5,22 +5,37 @@ data "archive_file" "lambda_function" { # <1>
   output_path      = "${path.module}/../sam-app/build/app.js.zip"
 }
 
+
 resource "aws_s3_bucket" "lambda_sources" { # <2>
-  acl = "private"
-  versioning {
-    enabled = true
+  bucket_prefix = "lambda-bucket"
+}
+
+resource "aws_s3_bucket_versioning" "lambda_versioning" { # <2>
+  bucket = aws_s3_bucket.lambda_sources.id
+  versioning_configuration {
+    status = "Enabled"
   }
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
+  bucket = aws_s3_bucket.lambda_sources.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.kms_key.arn
+      sse_algorithm     = "aws:kms"
     }
   }
 }
 
-resource "aws_s3_bucket_object" "object" { # <3>
-  bucket = aws_s3_bucket.lambda_sources.bucket
+resource "aws_kms_key" "kms_key" {
+  description             = "This key is used to encrypt bucket objects"
+  deletion_window_in_days = 10
+}
+
+
+resource "aws_s3_object" "object" { # <3>
+  bucket = aws_s3_bucket.lambda_sources.id
   key = "function.zip"
   source = "${path.module}/../sam-app/build/app.js.zip"
 
@@ -52,8 +67,8 @@ resource "aws_lambda_function" "function" { # <6>
   role = aws_iam_role.function_role.arn
   runtime = "nodejs14.x"
   s3_bucket = aws_s3_bucket.lambda_sources.bucket
-  s3_key = aws_s3_bucket_object.object.key
-  s3_object_version = aws_s3_bucket_object.object.version_id
+  s3_key = aws_s3_object.object.key
+  s3_object_version = aws_s3_object.object.version_id
   tracing_config {
     mode = "PassThrough"
   }
